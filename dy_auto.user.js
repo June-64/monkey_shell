@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         douyin auto scroll
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/June-64/monkey_shell
 // @version      0.1
 // @description  try to take over the world!
 // @author       You

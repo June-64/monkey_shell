@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         dianPing get search details page urls
-// @namespace    https://june-64.github.io/monkey_shell/
+// @namespace    https://github.com/June-64/monkey_shell
 // @version      1.3
 // @description  通过搜索获取大众点评每个城市的item详情url
 // @author       june
