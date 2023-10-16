@@ -1,0 +1,43 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Or your default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Copy files
+        run: |
+          mkdir docs
+          cp *.js docs
+      - name: Create index.html
+        run: |
+          echo "<!DOCTYPE html>" > docs/index.html
+          echo "<html>" >> docs/index.html
+          echo "<head>" >> docs/index.html
+          echo "    <title>My Scripts</title>" >> docs/index.html
+          echo "</head>" >> docs/index.html
+          echo "<body>" >> docs/index.html
+          echo "    <h1>My Scripts</h1>" >> docs/index.html
+          echo "    <ul>" >> docs/index.html
+          for filename in *.js; do
+            echo "        <li><a href=\"$filename\">$filename</a></li>" >> docs/index.html
+          done
+          echo "    </ul>" >> docs/index.html
+          echo "</body>" >> docs/index.html
+          echo "</html>" >> docs/index.html
+      - name: Copy .nojekyll
+        run: |
+          echo "" > docs/.nojekyll
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
