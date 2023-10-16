@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         dianPing get search details page urls
-// @namespace    http://tampermonkey.net/
+// @namespace    https://june-64.github.io/monkey_shell/
 // @version      1.3
-// @description  dianPing get search details page urls
+// @description  通过搜索获取大众点评每个城市的item详情url
 // @author       june
 // @match        *://*.dianping.com/search/keyword/*
 // @grant        none
