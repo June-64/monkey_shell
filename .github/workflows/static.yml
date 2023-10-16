@@ -32,7 +32,7 @@ jobs:
           echo "    </ul>" >> docs/index.html
           echo "</body>" >> docs/index.html
           echo "</html>" >> docs/index.html
-      - name: Copy .nojekyll
+      - name: Copy .nojekyll 
         run: |
           echo "" > docs/.nojekyll
 
