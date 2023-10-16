@@ -5,7 +5,7 @@
 // @description  通过搜索获取大众点评每个城市的item详情url
 // @author       june
 // @match        *://*.dianping.com/search/keyword/*
-// @grant        none
+// @grant        dianping
 // ==/UserScript==
 
 (function () {
