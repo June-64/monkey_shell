@@ -203,5 +203,5 @@
     });
 
     // 如果需要恢复原始的 XMLHttpRequest，可以使用以下代码：
-    // window.XMLHttpRequest = originalXHR;
+    // window.XMLHttpRequest = originalXHR; 
 })();
