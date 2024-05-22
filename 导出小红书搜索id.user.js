@@ -21,7 +21,7 @@
     const buttonContainer = document.createElement('div');
     buttonContainer.style.position = 'fixed';
     buttonContainer.style.bottom = '50px';
-    buttonContainer.style.left = '10px';
+    buttonContainer.style.right = '10px';
     buttonContainer.style.zIndex = '1000';
     buttonContainer.style.backgroundColor = 'white';
     buttonContainer.style.border = '1px solid black';
@@ -66,7 +66,7 @@
     const dataPreview = document.createElement('div');
     dataPreview.style.position = 'fixed';
     dataPreview.style.bottom = '90px'; // 调整这个值以避免与按钮容器重叠
-    dataPreview.style.left = '10px';
+    dataPreview.style.right = '10px';
     dataPreview.style.width = '300px';
     dataPreview.style.height = '400px';
     dataPreview.style.overflowY = 'scroll';
