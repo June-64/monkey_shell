@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.7
 // @description  拦截并导出小红书搜索请求的数据，并实时预览，支持启用和禁用拦截，清空数据功能和Toast消息
-// @author       ChatGPT
+// @author       June
 // @match        *://*.xiaohongshu.com/*
 // @grant        none
 // ==/UserScript==
