@@ -8,11 +8,11 @@
 // @icon         https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png
 // @grant        none
 // ==/UserScript==
-
 (function() {
     'use strict';
 
-    let idList = [];
+    // 初始化idList
+    let idList = JSON.parse(localStorage.getItem('idList')) || [];
     let isPreviewVisible = false; // 默认是收起的
     let isInterceptionEnabled = false; // 默认暂停拦截
     let inputValue = ""; // 过滤条件
@@ -152,6 +152,7 @@
     // 清空数据按钮点击事件
     clearButton.addEventListener('click', function() {
         idList = [];
+        localStorage.setItem('idList', JSON.stringify(idList));
         updateDataPreview();
         showToast('数据已清空');
     });
@@ -181,6 +182,7 @@
                         // 使用 Set 去重
                         const uniqueIds = new Set([...idList, ...ids]);
                         idList = [...uniqueIds];
+                        localStorage.setItem('idList', JSON.stringify(idList));
 
                         console.log('Intercepted response:', response);
                         updateDataPreview();
@@ -196,7 +198,7 @@
     }
 
     // 替换全局的 XMLHttpRequest
-    window.XMLHttpRequest = newXHR; 
+    window.XMLHttpRequest = newXHR;
 
     // 导出按钮点击事件
     exportButton.addEventListener('click', function() {
