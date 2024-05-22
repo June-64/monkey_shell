@@ -127,6 +127,8 @@
     function updateDataPreview() {
         dataPreview.innerHTML = `<pre>${JSON.stringify(idList, null, 2)}</pre>`;
     }
+    // 初始化时更新视图
+    updateDataPreview();
 
     // 收起/展开按钮点击事件
     toggleButton.addEventListener('click', function() {
