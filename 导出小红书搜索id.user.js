@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         拦截并导出小红书搜索请求
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  拦截并导出小红书搜索请求的数据，并实时预览，支持启用和禁用拦截，清空数据功能和Toast消息
 // @author       June
 // @match        *://*.xiaohongshu.com/*
