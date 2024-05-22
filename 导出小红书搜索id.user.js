@@ -5,6 +5,7 @@
 // @description  拦截并导出小红书搜索请求的数据，并实时预览，支持启用和禁用拦截，清空数据功能和Toast消息
 // @author       June
 // @match        *://*.xiaohongshu.com/*
+// @icon         https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png
 // @grant        none
 // ==/UserScript==
 
