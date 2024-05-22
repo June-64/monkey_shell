@@ -195,7 +195,7 @@
     }
 
     // 替换全局的 XMLHttpRequest
-    window.XMLHttpRequest = newXHR;
+    window.XMLHttpRequest = newXHR; 
 
     // 导出按钮点击事件
     exportButton.addEventListener('click', function() {
