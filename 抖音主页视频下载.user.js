@@ -5,6 +5,7 @@
 // @description  拦截请求并下载抖音视频，显示界面选择下载
 // @author       June
 // @match        https://www.douyin.com/*
+// @icon         https://p3-pc-weboff.byteimg.com/tos-cn-i-9r5gewecjs/logo-horizontal.svg
 // @grant        none
 // ==/UserScript==
 
