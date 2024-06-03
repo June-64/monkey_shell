@@ -242,6 +242,8 @@
 
     // 使用 XMLHttpRequest 下载视频
     function downloadVideo(title, url) {
+        // 下载一个就将数据删除
+        videoList = videoList.filter(video => video.url !== url);
         // 确保 URL 使用 HTTPS
         if (!url.startsWith('https://')) {
             url = url.replace('http://', 'https://');
