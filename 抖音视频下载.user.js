@@ -288,7 +288,7 @@
                 if (
                     this.readyState === 4 &&
                     this.status === 200 &&
-                    (this.responseURL.includes("/aweme/v1/web/aweme/post/") || this.responseURL.includes('/aweme/v2/web/feed/'))
+                    (this.responseURL.includes("/aweme/v1/web/aweme/post/") || this.responseURL.includes('/aweme/v2/web/feed/'))||this.responseURL.includes('/v1/web/aweme/favorite/')
                 ) {
                     let response = JSON.parse(this.responseText);
                     parseAndDownload(response);
