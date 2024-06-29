@@ -276,20 +276,26 @@
         }
       });
     }
-  
+
     
     // 下载选中的封面
     function downloadSelectedCover() {
+      let delay = 0;
       videoList.forEach((video) => {
         if (video.checkbox.checked) {
-          downloadCover(video.title, video.url);
-        }
+        setTimeout(() => downloadCover(video.title, video.cover), delay);
+        delay += 200; // 每个请求之间延迟200ms
+      }
       });
     }
   
     //下载所有封面
     function downloadAllCover() {
-      videoList.forEach((video) => downloadCover(video.title, video.url));
+      let delay = 0;
+      videoList.forEach((video, index) => {
+        setTimeout(() => downloadCover(video.title, video.cover), delay);
+        delay += 200; // 每个请求之间延迟200ms
+      });
     }
   
     // 下载封面图片并保存到本地
@@ -312,7 +318,7 @@
           a.style.display = "none";
           a.href = downloadUrl;
           // 设置下载文件的名称，例如使用标题和图片格式
-          a.download = title + ".jpg"; // 假设图片是 JPEG 格式
+          a.download = title + ".jpeg"; 
           document.body.appendChild(a);
           a.click(); // 触发下载
           window.URL.revokeObjectURL(downloadUrl); // 释放 Blob URL
