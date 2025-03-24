@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RAP接口对接标记
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  标记RAP接口是否已经对接，提高研发效率
 // @author       june
 // @match        http://rap.lastbs.com/*
