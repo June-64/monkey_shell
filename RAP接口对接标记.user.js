@@ -93,7 +93,6 @@
             const statusSelector = document.createElement('div');
             statusSelector.className = 'rap-status-selector';
             statusSelector.innerHTML = `
-                <span>状态:</span>
                 <select data-id="${interfaceId}">
                     <option value="pending" ${status === 'pending' ? 'selected' : ''}>待对接</option>
                     <option value="implemented" ${status === 'implemented' ? 'selected' : ''}>已对接</option>
