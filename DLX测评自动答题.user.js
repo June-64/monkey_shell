@@ -149,11 +149,33 @@
         return selectedAny;
     }
 
-    // 查找并点击下一步按钮
+    // 查找并点击下一步按钮或完成测评按钮
     function clickNextButton() {
-        let nextButton = null;
+        let button = null;
 
-        // 尝试所有可能的选择器
+        // 首先尝试查找"完成测评"按钮（基于提供的DOM结构）
+        const completeButtons = Array.from(document.querySelectorAll('div.i_btn.large')).filter(btn =>
+            btn.textContent && btn.textContent.trim() === '完成测评'
+        );
+
+        if (completeButtons.length > 0) {
+            log('找到完成测评按钮，点击它');
+            completeButtons[0].click();
+            return true;
+        }
+
+        // 如果没有找到完成测评按钮，继续寻找下一题按钮
+        const nextStepButtons = Array.from(document.querySelectorAll('div.i_btn.large')).filter(btn =>
+            btn.textContent && (btn.textContent.trim() === '下一题' || btn.textContent.trim() === '下一步')
+        );
+
+        if (nextStepButtons.length > 0) {
+            log('找到下一题按钮，点击它');
+            nextStepButtons[0].click();
+            return true;
+        }
+
+        // 如果上述特定方式没找到按钮，尝试所有可能的选择器
         for (const selector of config.nextButtonSelectors) {
             try {
                 // 对于包含文本的选择器，需要特殊处理
@@ -163,48 +185,47 @@
                         document.querySelectorAll('button, input[type="button"], input[type="submit"], a, div[class*="btn"]')
                     );
 
-                    nextButton = possibleElements.find(el =>
+                    button = possibleElements.find(el =>
                         el.textContent.includes(textToFind) ||
                         el.value === textToFind
                     );
                 } else {
-                    nextButton = document.querySelector(selector);
+                    button = document.querySelector(selector);
                 }
 
-                if (nextButton) {
-                    break;
+                if (button) {
+                    log(`找到按钮: ${button.textContent || button.value}`);
+                    button.click();
+                    return true;
                 }
             } catch (e) {
                 log(`选择器 ${selector} 异常: ${e.message}`);
             }
         }
 
-        // 如果没找到，尝试更通用的方法查找带有"下一"字样的按钮
-        if (!nextButton) {
-            const possibleElements = Array.from(
-                document.querySelectorAll('button, input[type="button"], input[type="submit"], a, .el-button, div[class*="btn"]')
-            );
+        // 如果没找到，尝试更通用的方法
+        const possibleElements = Array.from(
+            document.querySelectorAll('button, input[type="button"], input[type="submit"], a, div[class*="btn"]')
+        );
 
-            nextButton = possibleElements.find(el =>
-                (el.textContent && (el.textContent.includes('下一') || el.textContent.includes('下一题') || el.textContent.includes('下一步') || el.textContent.includes('完成测评'))) ||
-                el.value === '下一步' ||
-                el.value === '下一题' ||
-                el.value === '完成测评'
-            );
-        }
+        button = possibleElements.find(el =>
+            (el.textContent && (
+                el.textContent.includes('下一') ||
+                el.textContent.includes('下一题') ||
+                el.textContent.includes('下一步') ||
+                el.textContent.includes('完成测评')
+            )) ||
+            el.value === '下一步' ||
+            el.value === '下一题' ||
+            el.value === '完成测评'
+        );
 
-        // 专门检查用户提供的特殊格式按钮
-        if (!nextButton) {
-            const specialButtons = Array.from(document.querySelectorAll('div.i_btn.large'));
-            nextButton = specialButtons.find(el => el.textContent.includes('下一题'));
-        }
-
-        if (nextButton) {
-            log('找到下一步按钮，点击它');
-            nextButton.click();
+        if (button) {
+            log(`通用方法找到按钮: ${button.textContent || button.value}`);
+            button.click();
             return true;
         } else {
-            log('没有找到下一步按钮');
+            log('没有找到下一步或完成测评按钮');
             return false;
         }
     }
