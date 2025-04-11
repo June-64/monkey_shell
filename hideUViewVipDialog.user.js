@@ -1,13 +1,11 @@
 // ==UserScript==
     // @name         uview隐藏会员弹窗
     // @namespace    http://tampermonkey.net/
-    // @version      0.1
+    // @version      0.2
     // @description  隐藏uview网站上的会员广告弹窗
     // @author       june
     // @match        *://*.uiadmin.net/*
     // @match        *://uiadmin.net/*
-    // @match        *://*.dlx.com/*
-    // @match        *://dlx.com/*
     // @grant        GM_xmlhttpRequest
     // @run-at       document-start
     // ==/UserScript==
@@ -27,8 +25,8 @@
                     code: 200,
                     msg: "成功",
                     data: {
-                        id: "11f01680d5c332ceb09b00163e086888",
-                        isVip: true, // 修改为 true
+                        id: "",
+                        isVip: true,
                         base64: ""
                     },
                     env: "prod"
