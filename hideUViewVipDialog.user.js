@@ -1,4 +1,4 @@
-取// ==UserScript==
+// ==UserScript==
     // @name         uview隐藏会员弹窗
     // @namespace    http://tampermonkey.net/
     // @version      0.1
