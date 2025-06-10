@@ -33,70 +33,62 @@ cat <<EOF > docs/index.html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>油猴脚本库</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Tampermonkey Scripts</title>
     <style>
         :root {
             --bg-color: #f8f9fa;
             --card-bg-color: #ffffff;
             --text-color: #212529;
-            --heading-color: #000000;
+            --heading-color: #2c3e50;
             --link-color: #007bff;
             --border-color: #e9ecef;
-            --shadow-color: rgba(0, 0, 0, 0.04);
-            --footer-link-color: #555;
+            --shadow-color: rgba(0, 0, 0, 0.05);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #121212;
-                --card-bg-color: #1e1e1e;
+                --bg-color: #1a1a1a;
+                --card-bg-color: #2c2c2c;
                 --text-color: #e0e0e0;
                 --heading-color: #ffffff;
                 --link-color: #69b3ff;
-                --border-color: #333;
-                --shadow-color: rgba(0, 0, 0, 0.2);
-                --footer-link-color: #aaa;
+                --border-color: #383838;
+                --shadow-color: rgba(0, 0, 0, 0.25);
             }
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--bg-color);
             max-width: 800px;
             margin: 40px auto;
             padding: 0 20px;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.2s, color 0.2s;
         }
 
         h1 {
             text-align: center;
-            font-size: 2.8em;
-            font-weight: 700;
+            font-size: 2.5em;
+            font-weight: 600;
             margin-bottom: 20px;
-            background: linear-gradient(45deg, #0d6efd, #6f42c1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: #0d6efd; /* Fallback for browsers that don't support background-clip */
+            color: var(--heading-color);
         }
 
         .info-box {
             background: var(--card-bg-color);
             padding: 20px 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px var(--shadow-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--shadow-color);
             margin-bottom: 40px;
             text-align: center;
             border: 1px solid var(--border-color);
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: background-color 0.2s, border-color 0.2s;
         }
         .info-box strong {
             color: var(--heading-color);
-            transition: color 0.3s;
+            transition: color 0.2s;
         }
         .info-box .label {
             font-size: 0.9em;
@@ -108,32 +100,25 @@ cat <<EOF > docs/index.html
         }
         li {
             background: var(--card-bg-color);
-            margin-bottom: 12px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px var(--shadow-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px var(--shadow-color);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
             border: 1px solid var(--border-color);
         }
         li:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px var(--shadow-color);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px var(--shadow-color);
         }
         a {
-            display: flex;
-            align-items: center;
-            padding: 18px 22px;
+            display: block;
+            padding: 16px 20px;
             text-decoration: none;
             color: var(--link-color);
             font-weight: 500;
             font-size: 1.1em;
             word-break: break-all;
-            transition: color 0.3s;
-        }
-        a::before {
-            content: '📜';
-            margin-right: 14px;
-            font-size: 1.2em;
-            opacity: 0.8;
+            transition: color 0.2s;
         }
         footer {
             text-align: center;
@@ -142,10 +127,10 @@ cat <<EOF > docs/index.html
             border-top: 1px solid var(--border-color);
             font-size: 0.9em;
             color: #6c757d;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s;
         }
         footer a {
-            color: var(--footer-link-color);
+            color: var(--link-color);
             text-decoration: none;
             display: inline;
             padding: 0;
@@ -157,7 +142,7 @@ cat <<EOF > docs/index.html
     </style>
 </head>
 <body>
-    <h1>My Scripts</h1>
+    <h1>Tampermonkey Scripts</h1>
     <div class="info-box">
         <span class="label">Last Updated:</span> <strong>$commit_date</strong><br>
         <span class="label">Latest Change:</span> <strong>$commit_message_subject</strong>
@@ -169,4 +154,9 @@ ${file_list_html}
     <footer>
         <p>Generated by GitHub Actions</p>
         <a href="https://github.com/${repo_name}" target="_blank">GitHub Repository</a>
-ons
+    </footer>
+</body>
+</html>
+EOF
+
+echo "index.html generated successfully."
