@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         德立信高考-账号管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      2.3
+// @version      2.4
 // @description  通过Github Gist远程管理德立信账号，并提供便捷的切换功能。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
@@ -22,6 +22,9 @@
     // --- 配置区域 ---
     const CONFIG = {
         gistId: '1d935118904ccdf1b512af432052eac2',
+
+        // Gist账号列表的本地缓存时间 (毫秒)
+        cacheTTL: 10 * 60 * 1000, // 10 分钟
 
         // 用于触发登录流程的选择器
         loggedInContainerSelector: '.my-login',
@@ -127,6 +130,29 @@
                 border-color: #007bff;
                 box-shadow: 0 0 0 3px rgba(0,123,255,.1);
             }
+            #${PANEL_ID} .loading-overlay {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background-color: rgba(255, 255, 255, 0.8);
+                z-index: 10;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 12px;
+                backdrop-filter: blur(2px);
+            }
+            #${PANEL_ID} .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
             #${PANEL_ID} .content {
                 padding: 8px 0;
                 max-height: 400px;
@@ -196,6 +222,9 @@
             <div class="content">
                 <div class="account-list"></div>
             </div>
+            <div class="loading-overlay" style="display: none;">
+                <div class="spinner"></div>
+            </div>
         `;
         document.body.appendChild(panel);
 
@@ -211,10 +240,10 @@
         panel.querySelector('#refresh-accounts-btn').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation(); // Prevent drag from starting
-            refreshAccounts();
+            refreshAccounts(true); // Force refresh
         });
         panel.querySelector('#account-search-input').addEventListener('input', renderAccounts);
-        makeDraggable(panel);
+        makeDraggable(panel, 'dlx-panel-pos');
         makeDraggable(toggleButton, 'dlx-button-pos');
     }
 
@@ -260,13 +289,24 @@
         });
     }
 
-    async function fetchAccounts() {
+    async function fetchAccounts(force = false) {
         if (!CONFIG.gistId) {
             accounts = [];
             console.error("Gist ID 未在脚本中配置。");
             return Promise.reject("Gist ID not configured");
         }
 
+        if (!force) {
+            const cachedData = await GM_getValue('dlx_cached_accounts', null);
+            const cacheTimestamp = await GM_getValue('dlx_cache_timestamp', 0);
+            if (cachedData && (Date.now() - cacheTimestamp < CONFIG.cacheTTL)) {
+                console.log("从缓存加载账号列表。");
+                accounts = cachedData;
+                return Promise.resolve();
+            }
+        }
+
+        console.log("正在从 Gist API 获取最新账号列表...");
         const gistApiUrl = `https://api.github.com/gists/${CONFIG.gistId}`;
 
         try {
@@ -306,11 +346,14 @@
                     method: 'GET',
                     url: rawUrl,
                     responseType: 'json',
-                    onload: (response) => {
+                    onload: async (response) => {
                         if (response.status >= 200 && response.status < 400) {
                             if (Array.isArray(response.response)) {
                                 accounts = response.response;
                                 console.log('账号列表加载成功:', accounts);
+                                // 存入缓存
+                                await GM_setValue('dlx_cached_accounts', accounts);
+                                await GM_setValue('dlx_cache_timestamp', Date.now());
                                 resolve();
                             } else {
                                 reject('Gist文件内容不是有效的JSON数组。');
@@ -330,18 +373,18 @@
         }
     }
 
-    async function refreshAccounts() {
+    async function refreshAccounts(force = false) {
         const listContainer = document.querySelector(`#${PANEL_ID} .account-list`);
         const searchInput = document.getElementById('account-search-input');
 
         if(searchInput) searchInput.value = '';
 
         if(listContainer) {
-            listContainer.innerHTML = `<div class="placeholder">正在从Gist加载...</div>`;
+            listContainer.innerHTML = `<div class="placeholder">正在加载...</div>`;
         }
 
         try {
-            await fetchAccounts();
+            await fetchAccounts(force);
         } catch (error) {
             alert(`加载账号失败: ${error}`);
         }
@@ -418,6 +461,10 @@
 
         hidePanel();
 
+        const panel = document.getElementById(PANEL_ID);
+        const overlay = panel.querySelector('.loading-overlay');
+        overlay.style.display = 'flex';
+
         try {
             await triggerLoginModal();
             console.log('登录框已触发，等待其出现...');
@@ -487,6 +534,8 @@
             console.error('登录流程失败:', error);
             alert(`登录流程失败: ${error.message}`);
             showPanel();
+        } finally {
+            overlay.style.display = 'none';
         }
     }
     
