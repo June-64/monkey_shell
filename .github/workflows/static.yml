@@ -20,7 +20,7 @@ jobs:
       - name: Generate index.html
         run: |
           chmod +x .github/scripts/generate-index.sh
-          bash .github/scripts/generate-index.sh
+          bash .github/scripts/generate-index.sh ${{ github.repository }}
 
       - name: Add .nojekyll file
         run: touch docs/.nojekyll
