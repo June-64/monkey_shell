@@ -12,6 +12,8 @@
 // @grant        GM_addStyle
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 
 (function() {
@@ -213,6 +215,7 @@
         });
         panel.querySelector('#account-search-input').addEventListener('input', renderAccounts);
         makeDraggable(panel);
+        makeDraggable(toggleButton, 'dlx-button-pos');
     }
 
     // 渲染账号列表
@@ -512,39 +515,64 @@
     }
     
     // 拖动功能
-    function makeDraggable(element) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        const header = element.querySelector(".header");
-
-        if (header) {
-            header.onmousedown = dragMouseDown;
-        } else {
-            element.onmousedown = dragMouseDown;
+    async function makeDraggable(element, storageKey) {
+        if (storageKey) {
+            const savedPos = await GM_getValue(storageKey, null);
+            if (savedPos && savedPos.top && savedPos.left) {
+                element.style.top = savedPos.top;
+                element.style.left = savedPos.left;
+            }
         }
+
+        const handle = element.querySelector(".header") || element;
+        handle.onmousedown = dragMouseDown;
 
         function dragMouseDown(e) {
-            e = e || window.event;
-            e.preventDefault();
+            if (e.button !== 0) return; // Only main button
+
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let isDragging = false;
+            const startX = e.clientX;
+            const startY = e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
+
             document.onmousemove = elementDrag;
-        }
+            document.onmouseup = closeDragElement;
 
-        function elementDrag(e) {
-            e = e || window.event;
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            element.style.top = (element.offsetTop - pos2) + "px";
-            element.style.left = (element.offsetLeft - pos1) + "px";
-        }
+            function elementDrag(e) {
+                if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+                    isDragging = true;
+                }
+                if (!isDragging) return;
 
-        function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            async function closeDragElement(e) {
+                document.onmousemove = null;
+                document.onmouseup = null;
+
+                if (isDragging) {
+                    // Prevent click event from firing after a drag
+                    const blocker = (evt) => {
+                        evt.stopPropagation();
+                        window.removeEventListener('click', blocker, true);
+                    };
+                    window.addEventListener('click', blocker, true);
+                    setTimeout(() => window.removeEventListener('click', blocker, true), 0);
+
+                    if (storageKey) {
+                        await GM_setValue(storageKey, { top: element.style.top, left: element.style.left });
+                    }
+                }
+            }
         }
     }
 
