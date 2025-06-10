@@ -1,47 +1,128 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Or your default branch
+      - main # Or your default branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Copy files
+      - name: Setup Pages content directory
         run: |
           mkdir docs
           cp *.js docs
-      - name: Create index.html
+
+      - name: Generate and Style index.html
         run: |
           commit_date=$(git log -1 --format=%cd --date=format:"%Y-%m-%d %H:%M:%S")
-          commit_message=$(git log -1 --format=%B)
-          echo "<!DOCTYPE html>" > docs/index.html
-          echo "<html>" >> docs/index.html
-          echo "<head>" >> docs/index.html
-          echo "    <title>My Scripts</title>" >> docs/index.html
-          echo "</head>" >> docs/index.html
-          echo "<body>" >> docs/index.html
-          echo "    <h1>My Scripts</h1>" >> docs/index.html
-          echo "    <h2>Last Updated: $commit_date</h2>" >> docs/index.html
-          echo "    <h2>Commit Message: $commit_message</h2>" >> docs/index.html
-          echo "    <ul>" >> docs/index.html
-          for filename in *.js; do
-            echo "        <li><a href=\"$filename\">$filename</a></li>" >> docs/index.html
-          done
-          echo "    </ul>" >> docs/index.html
-          echo "</body>" >> docs/index.html
-          echo "</html>" >> docs/index.html
-      - name: Copy .nojekyll
-        run: |
-          echo "" > docs/.nojekyll
+          commit_message_subject=$(git log -1 --format=%s)
 
-      - name: Deploy
+          # Generate the HTML for the list of script files
+          file_list_html=""
+          for filename in *.js; do
+            file_list_html="${file_list_html}      <li><a href=\"${filename}\">${filename}</a></li>\n"
+          done
+
+          # Use a 'here document' to create a beautiful index.html file
+          cat <<EOF > docs/index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>My Scripts</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      max-width: 800px;
+                      margin: 40px auto;
+                      padding: 0 20px;
+                      background-color: #f9f9f9;
+                  }
+                  h1 {
+                      text-align: center;
+                      color: #2c3e50;
+                      font-size: 2.5em;
+                      margin-bottom: 10px;
+                  }
+                  .info-box {
+                      background: #fff;
+                      padding: 15px 25px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                      margin-bottom: 30px;
+                      text-align: center;
+                      border: 1px solid #eee;
+                  }
+                  .info-box strong {
+                      color: #2c3e50;
+                  }
+                  .info-box .label {
+                      font-size: 0.9em;
+                      color: #7f8c8d;
+                  }
+                  ul {
+                      list-style-type: none;
+                      padding: 0;
+                  }
+                  li {
+                      background: #fff;
+                      margin-bottom: 10px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+                      transition: transform 0.2s ease, box-shadow 0.2s ease;
+                      border: 1px solid #eee;
+                  }
+                  li:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                  }
+                  a {
+                      display: block;
+                      padding: 15px 20px;
+                      text-decoration: none;
+                      color: #3498db;
+                      font-weight: 500;
+                      font-size: 1.1em;
+                      word-break: break-all;
+                  }
+                  footer {
+                      text-align: center;
+                      margin-top: 40px;
+                      font-size: 0.9em;
+                      color: #95a5a6;
+                  }
+              </style>
+          </head>
+          <body>
+              <h1>My Scripts</h1>
+              <div class="info-box">
+                  <span class="label">Last Updated:</span> <strong>$commit_date</strong><br>
+                  <span class="label">Latest Change:</span> <strong>$commit_message_subject</strong>
+              </div>
+          
+              <ul>
+$(printf "%b" "$file_list_html")
+              </ul>
+              <footer>
+                  Generated by GitHub Actions
+              </footer>
+          </body>
+          </html>
+          EOF
+
+      - name: Add .nojekyll file
+        run: touch docs/.nojekyll
+
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs 
+          publish_dir: ./docs
