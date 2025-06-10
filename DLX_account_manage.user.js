@@ -1,17 +1,17 @@
 // ==UserScript==
 // @name         德立信高考-账号管理
-// @namespace    http://tampermonkey.net/
-// @version      2.2
+// @namespace    https://june-64.github.io/monkey_shell/
+// @version      2.3
 // @description  通过Github Gist远程管理德立信账号，并提供便捷的切换功能。
-// @author       YourName
+// @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
+// @updateURL    https://raw.githubusercontent.com/June-64/monkey_shell/main/DLX_account_manage.user.js
+// @downloadURL  https://raw.githubusercontent.com/June-64/monkey_shell/main/DLX_account_manage.user.js
 // @match        https://www.dlxgk.com/*
 // @match        https://gk.delesson.cn/*
 // @grant        GM_addStyle
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
-// @grant        GM_getValue
-// @grant        GM_setValue
 // ==/UserScript==
 
 (function() {
@@ -20,12 +20,6 @@
     // --- 配置区域 ---
     const CONFIG = {
         gistId: '1d935118904ccdf1b512af432052eac2',
-
-        // --- 更新设置 ---
-        // 脚本的GitHub raw链接，用于检查更新
-        scriptUrl: 'https://raw.githubusercontent.com/June-64/monkey_shell/main/DLX_account_manage.user.js',
-        // 检查更新的频率 (毫秒)
-        updateCheckInterval: 24 * 60 * 60 * 1000, // 24 小时
 
         // 用于触发登录流程的选择器
         loggedInContainerSelector: '.my-login',
@@ -554,93 +548,11 @@
         }
     }
 
-    // --- 更新检查 ---
-    function isNewerVersion(remote, local) {
-        const remoteParts = remote.split('.').map(Number);
-        const localParts = local.split('.').map(Number);
-        const len = Math.max(remoteParts.length, localParts.length);
-
-        for (let i = 0; i < len; i++) {
-            const r = remoteParts[i] || 0;
-            const l = localParts[i] || 0;
-            if (r > l) return true;
-            if (r < l) return false;
-        }
-        return false;
-    }
-
-    function showUpdateNotification() {
-        const headerActions = document.querySelector(`#${PANEL_ID} .header .actions`);
-        if (!headerActions || headerActions.querySelector('.update-available')) {
-            return; // Already exists
-        }
-
-        const updateLink = document.createElement('a');
-        const userFriendlyUrl = CONFIG.scriptUrl
-            .replace('raw.githubusercontent.com', 'github.com')
-            .replace('/main/', '/blob/main/');
-        updateLink.href = userFriendlyUrl;
-        updateLink.target = '_blank';
-        updateLink.className = 'icon-btn update-available';
-        updateLink.title = '有新版本可用！点击前往更新';
-        updateLink.innerHTML = '&#128229;'; // Download icon
-
-        headerActions.insertBefore(updateLink, headerActions.firstChild);
-    }
-
-    async function checkForUpdates() {
-        const lastCheck = await GM_getValue('lastUpdateCheck', 0);
-        if (Date.now() - lastCheck < CONFIG.updateCheckInterval) {
-            console.log('Update check: skipped, too soon.');
-            return;
-        }
-
-        console.log('Checking for script updates...');
-        try {
-            const remoteScript = await new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
-                    method: 'GET',
-                    url: CONFIG.scriptUrl,
-                    onload: response => {
-                        if (response.status >= 200 && response.status < 400) {
-                            resolve(response.responseText);
-                        } else {
-                            reject(`Failed to fetch script, status: ${response.status}`);
-                        }
-                    },
-                    onerror: error => reject(error)
-                });
-            });
-
-            const remoteVersionMatch = remoteScript.match(/@version\s+([\d.]+)/);
-            if (!remoteVersionMatch) {
-                console.error('Update check: Could not find version in remote script.');
-                return;
-            }
-
-            const remoteVersion = remoteVersionMatch[1];
-            const localVersion = GM_info.script.version;
-
-            console.log(`Update check: Local version ${localVersion}, Remote version ${remoteVersion}`);
-
-            if (isNewerVersion(remoteVersion, localVersion)) {
-                console.log('A new version of the script is available!');
-                showUpdateNotification();
-            }
-
-            await GM_setValue('lastUpdateCheck', Date.now());
-
-        } catch (error) {
-            console.error('Error checking for script updates:', error);
-        }
-    }
-
     // 初始化
     function init() {
         addStyles();
         createPanel();
         refreshAccounts();
-        checkForUpdates();
         
         // 添加一个菜单命令来打开面板
         GM_registerMenuCommand("账号管理", togglePanel);
