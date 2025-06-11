@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         德立信高考-账号管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      2.5
+// @version      2.7
 // @description  通过Github Gist远程管理德立信账号，并提供便捷的切换功能。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
 // @updateURL    https://raw.githubusercontent.com/June-64/monkey_shell/main/DLX_account_manage.user.js
 // @downloadURL  https://raw.githubusercontent.com/June-64/monkey_shell/main/DLX_account_manage.user.js
-// @match        https://www.dlxgk.com/*
+// @match        https://dlxgk.com/*
 // @match        https://gk.delesson.cn/*
 // @connect      api.github.com
 // @connect      gist.githubusercontent.com
