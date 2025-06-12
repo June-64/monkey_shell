@@ -473,7 +473,7 @@
         {
           text: "确认删除",
           type: "danger",
-          onClick: () => {
+          onClick: (modal, closeModal) => {
             const deletedScenarioName = activeScenarioName;
             delete scenarios[activeScenarioName];
             activeScenarioName = Object.keys(scenarios)[0];
@@ -485,6 +485,7 @@
               `方案 "${deletedScenarioName}" 已被删除。`,
               "info"
             );
+            closeModal();
           },
         },
       ],
