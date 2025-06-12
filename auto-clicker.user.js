@@ -71,22 +71,34 @@
                 </div>
 
                 <div class="ac-section ac-steps-container">
-                    <div class="ac-steps-header">
+                    <div class="ac-collapsible-header" data-section-key="steps">
                         <h3>操作步骤</h3>
-                        <div class="ac-add-step-buttons">
-                            <button id="ac-add-click-btn" class="ac-btn ac-btn-icon" title="添加点击步骤">🖱️</button>
-                            <button id="ac-add-input-btn" class="ac-btn ac-btn-icon" title="添加输入步骤">⌨️</button>
-                            <button id="ac-add-wait-btn" class="ac-btn ac-btn-icon" title="添加等待步骤">⏱️</button>
+                        <div class="ac-header-controls">
+                            <div class="ac-add-step-buttons">
+                                <button id="ac-add-click-btn" class="ac-btn ac-btn-icon" title="添加点击步骤">🖱️</button>
+                                <button id="ac-add-input-btn" class="ac-btn ac-btn-icon" title="添加输入步骤">⌨️</button>
+                                <button id="ac-add-wait-btn" class="ac-btn ac-btn-icon" title="添加等待步骤">⏱️</button>
+                            </div>
+                            <span class="ac-collapse-icon">▲</span>
                         </div>
                     </div>
-                    <ul id="ac-steps-list"></ul>
+                    <div class="ac-collapsible-content">
+                        <ul id="ac-steps-list"></ul>
+                    </div>
                 </div>
 
                 <div class="ac-section ac-timer-section">
-                    <h3>定时任务</h3>
-                    <div id="ac-timer-status">未设置</div>
-                    <input type="text" id="ac-timer-input" placeholder="点击选择执行时间...">
-                    <div class="ac-timer-buttons"><button id="ac-set-timer-btn" class="ac-btn ac-btn-secondary">设置</button><button id="ac-pause-resume-btn" class="ac-btn ac-btn-warning" disabled>暂停</button><button id="ac-cancel-timer-btn" class="ac-btn ac-btn-danger" disabled>取消</button></div>
+                    <div class="ac-collapsible-header" data-section-key="timer">
+                        <h3>定时任务</h3>
+                        <div class="ac-header-controls">
+                            <span class="ac-collapse-icon">▲</span>
+                        </div>
+                    </div>
+                    <div class="ac-collapsible-content">
+                        <div id="ac-timer-status">未设置</div>
+                        <input type="text" id="ac-timer-input" placeholder="点击选择执行时间...">
+                        <div class="ac-timer-buttons"><button id="ac-set-timer-btn" class="ac-btn ac-btn-secondary">设置</button><button id="ac-pause-resume-btn" class="ac-btn ac-btn-warning" disabled>暂停</button><button id="ac-cancel-timer-btn" class="ac-btn ac-btn-danger" disabled>取消</button></div>
+                    </div>
                 </div>
 
                 <div class="ac-section"><button id="ac-run-btn" class="ac-btn ac-btn-main">立即执行当前方案</button></div>
@@ -101,6 +113,7 @@
 
     applyStyles();
     attachEventListeners();
+    initCollapsibleSections();
     loadScenarios();
     initPositioningAndDraggability();
 
@@ -145,9 +158,13 @@
             .ac-toggle-btn:hover { background-color: rgba(255,255,255,0.1); }
             .ac-section { border-top: 1px solid #4a627a; padding-top: 20px; }
             .ac-section:first-child { border-top: none; padding-top: 0; }
-            .ac-steps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-            h3 { margin: 0 0 10px 0; font-size: 16px; color: #bdc3c7; }
-            .ac-steps-header h3 { margin: 0; }
+            .ac-collapsible-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 10px; }
+            .ac-collapsible-header h3 { margin: 0; font-size: 16px; color: #bdc3c7; }
+            .ac-header-controls { display: flex; align-items: center; gap: 15px; }
+            .ac-collapse-icon { font-size: 14px; transition: transform 0.3s ease; transform-origin: center; user-select: none; }
+            .ac-section.collapsed .ac-collapsible-content { display: none; }
+            .ac-section.collapsed .ac-collapsible-header { margin-bottom: 0; }
+            .ac-section.collapsed .ac-collapse-icon { transform: rotate(-90deg); }
             label { display: block; margin-bottom: 8px; font-size: 14px; color: #bdc3c7; }
             
             /* Scenario Manager */
@@ -1243,5 +1260,34 @@
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&#39;');
+  }
+
+  function initCollapsibleSections() {
+      const states = GM_getValue('collapsibleStates', {}); // Default to empty object
+
+      document.querySelectorAll(`#${SCRIPT_ID}-panel .ac-collapsible-header`).forEach(header => {
+          const section = header.closest('.ac-section');
+          const sectionKey = header.dataset.sectionKey;
+
+          // Apply saved state
+          if (states[sectionKey] === true) {
+              section.classList.add('collapsed');
+          }
+
+          // Add click listener
+          header.addEventListener('click', (e) => {
+              if (e.target.closest('button, a, input')) {
+                  return;
+              }
+              e.preventDefault();
+              section.classList.toggle('collapsed');
+              
+              // Save state
+              const isCollapsed = section.classList.contains('collapsed');
+              const currentStates = GM_getValue('collapsibleStates', {});
+              currentStates[sectionKey] = isCollapsed;
+              GM_setValue('collapsibleStates', currentStates);
+          });
+      });
   }
 })();
