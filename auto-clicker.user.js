@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         网页自动化流程管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      5.0
+// @version      6.0
 // @description  一个功能强大的网页自动化工具，支持多方案、步骤类型、持久化存储和高级流程控制。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
@@ -62,7 +62,7 @@
     document.body.appendChild(panel);
 
     panel.innerHTML = `
-            <div class="ac-header"><span class="ac-title">流程管理 v5.0</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
+            <div class="ac-header"><span class="ac-title">流程管理 v6.0</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
             <div class="ac-body">
                 <div class="ac-section ac-scenario-manager">
                     <label>当前方案:</label>
@@ -70,17 +70,15 @@
                     <div id="ac-scenario-creator" class="ac-scenario-controls" style="display: none;"><input type="text" id="ac-new-scenario-name" placeholder="输入新方案名称..."><button id="ac-save-scenario-btn" title="保存">✓</button><button id="ac-cancel-scenario-btn" title="取消">✗</button></div>
                 </div>
 
-                <div class="ac-section ac-add-step-section">
-                    <h3>添加新操作</h3>
-                    <div class="ac-add-step-buttons">
-                        <button id="ac-add-click-btn" class="ac-btn ac-btn-primary" title="添加一个点击元素的步骤">🖱️ 点击</button>
-                        <button id="ac-add-input-btn" class="ac-btn ac-btn-primary" title="添加一个输入文本的步骤">⌨️ 输入</button>
-                        <button id="ac-add-wait-btn" class="ac-btn ac-btn-primary" title="添加一个延时等待的步骤">⏱️ 等待</button>
-                    </div>
-                </div>
-
                 <div class="ac-section ac-steps-container">
-                    <h3>操作步骤</h3>
+                    <div class="ac-steps-header">
+                        <h3>操作步骤</h3>
+                        <div class="ac-add-step-buttons">
+                            <button id="ac-add-click-btn" class="ac-btn ac-btn-icon" title="添加点击步骤">🖱️</button>
+                            <button id="ac-add-input-btn" class="ac-btn ac-btn-icon" title="添加输入步骤">⌨️</button>
+                            <button id="ac-add-wait-btn" class="ac-btn ac-btn-icon" title="添加等待步骤">⏱️</button>
+                        </div>
+                    </div>
                     <ul id="ac-steps-list"></ul>
                 </div>
 
@@ -117,11 +115,16 @@
             #${SCRIPT_ID}-panel, #${SCRIPT_ID}-minimap { position: fixed; z-index: 99999; }
             #${SCRIPT_ID}-panel { width: 340px; background-color: #2c3e50; color: #ecf0f1; border-radius: 12px; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
             .ac-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-            .ac-add-step-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-            #ac-steps-list { list-style-type: none; padding: 0; margin: 0; }
+            .ac-add-step-buttons { display: flex; gap: 8px; }
+            #ac-steps-list { list-style-type: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
+            #ac-steps-list::-webkit-scrollbar { width: 8px; }
+            #ac-steps-list::-webkit-scrollbar-track { background: #2c3e50; }
+            #ac-steps-list::-webkit-scrollbar-thumb { background-color: #56708b; border-radius: 4px; }
+            #ac-steps-list::-webkit-scrollbar-thumb:hover { background-color: #6c88a9; }
             #ac-steps-list li { padding: 8px 12px; border-bottom: 1px solid #4a627a; display: flex; align-items: center; transition: background-color 0.2s; cursor: grab; }
+            #ac-steps-list li:hover { background-color: #34495e; }
             #ac-steps-list li .step-icon { width: 30px; font-size: 18px; text-align: center; }
-            #ac-steps-list li .step-details { flex-grow: 1; }
+            #ac-steps-list li .step-details { flex-grow: 1; overflow: hidden; }
             #ac-steps-list li .step-details .step-type { font-weight: bold; color: #3498db; }
             #ac-steps-list li .step-details .step-param { font-size: 0.9em; color: #bdc3c7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
             .ac-delete-step-btn { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.7; transition: opacity 0.2s; margin-left: auto; padding-left: 10px; }
@@ -142,7 +145,9 @@
             .ac-toggle-btn:hover { background-color: rgba(255,255,255,0.1); }
             .ac-section { border-top: 1px solid #4a627a; padding-top: 20px; }
             .ac-section:first-child { border-top: none; padding-top: 0; }
+            .ac-steps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
             h3 { margin: 0 0 10px 0; font-size: 16px; color: #bdc3c7; }
+            .ac-steps-header h3 { margin: 0; }
             label { display: block; margin-bottom: 8px; font-size: 14px; color: #bdc3c7; }
             
             /* Scenario Manager */
@@ -161,6 +166,8 @@
             .ac-btn:disabled { opacity: 0.5; cursor: not-allowed; }
             .ac-btn-primary { background-color: #27ae60; color: white; } /* Green */
             .ac-btn-primary:hover:not(:disabled) { background-color: #2ecc71; }
+            .ac-btn.ac-btn-icon { width: 35px; height: 35px; padding: 0; font-size: 18px; background-color: #56708b; }
+            .ac-btn.ac-btn-icon:hover:not(:disabled) { background-color: #6c88a9; }
             #ac-select-btn.selecting { background-color: #e67e22; } /* Orange */
             .ac-btn-main { background-color: #3498db; color: white; } /* Blue */
             .ac-btn-main:hover:not(:disabled) { background-color: #5dade2; }
@@ -473,15 +480,13 @@
   function renderScenariosDropdown() {
     const select = document.getElementById("ac-scenario-select");
     select.innerHTML = "";
-    for (const name in scenarios) {
+    Object.keys(scenarios).forEach((name) => {
       const option = document.createElement("option");
       option.value = name;
       option.textContent = name;
-      if (name === activeScenarioName) {
-        option.selected = true;
-      }
       select.appendChild(option);
-    }
+    });
+    select.value = activeScenarioName;
   }
 
   // --- 核心UI渲染与交互 ---
@@ -489,30 +494,78 @@
   function renderSteps() {
     const list = document.getElementById("ac-steps-list");
     list.innerHTML = "";
-    if (!activeScenarioName || !scenarios[activeScenarioName]) return;
+    if (!activeScenarioName || !scenarios[activeScenarioName] || scenarios[activeScenarioName].steps.length === 0) {
+        list.innerHTML = '<li><span class="step-details" style="text-align: center; width: 100%; color: #7f8c8d;">暂无步骤，请添加操作</span></li>';
+        return;
+    }
 
     scenarios[activeScenarioName].steps.forEach((step, index) => {
       const li = document.createElement('li');
       li.dataset.index = index;
       li.draggable = true;
+      
       let icon, typeText, paramText, fullDetails;
+
+      const stepNameOrDefault = escapeHtml(step.name || '');
 
       switch (step.type) {
         case 'click': 
-          icon = '🖱️'; typeText = '点击操作'; paramText = `步骤 ${index + 1}`; fullDetails = step.selector; break;
+          icon = '🖱️'; 
+          typeText = '点击'; 
+          paramText = stepNameOrDefault || `点击 #${index + 1}`;
+          fullDetails = `目标: ${step.selector}`; 
+          break;
         case 'inputText': 
-          icon = '⌨️'; typeText = '输入文本'; paramText = `"${step.inputValue}"`; fullDetails = `输入到: ${step.selector}`; break;
+          icon = '⌨️'; 
+          typeText = '输入'; 
+          paramText = stepNameOrDefault || `输入 #${index + 1}`;
+          fullDetails = `输入 "${escapeHtml(step.inputValue)}" 到 ${step.selector}`; 
+          break;
         case 'wait': 
-          icon = '⏱️'; typeText = '等待'; paramText = `${step.waitTime} 秒`; fullDetails = `等待 ${step.waitTime} 秒`; break;
+          icon = '⏱️'; 
+          typeText = '等待'; 
+          paramText = stepNameOrDefault || `${step.waitTime} 秒`;
+          fullDetails = `等待 ${step.waitTime} 秒`; 
+          break;
         default:
-          icon = '❓'; typeText = '未知操作'; paramText = ''; fullDetails = ''; break;
+          icon = '❓'; 
+          typeText = '未知'; 
+          paramText = stepNameOrDefault; 
+          fullDetails = '未知操作'; 
+          break;
       }
 
       li.innerHTML = `
-                <div class="step-icon">${icon}</div>
-                <div class="step-details"><div class="step-type">${typeText}</div><div class="step-param" title="${fullDetails}">${paramText}</div></div>
-                <button class="ac-delete-step-btn" title="删除">❌</button>
-            `;
+        <div class="step-icon">${icon}</div>
+        <div class="step-details">
+            <div class="step-type">${typeText}</div>
+            <div class="step-param" title="${fullDetails}">${paramText}</div>
+        </div>
+        <button class="ac-delete-step-btn" title="删除">❌</button>
+      `;
+      
+      if (step.type === 'click' || step.type === 'inputText') {
+        li.addEventListener('mouseenter', () => {
+          try {
+            const element = document.querySelector(step.selector);
+            if (element) {
+              element.classList.add('ac-hover-highlight');
+            }
+          } catch (e) {
+            console.warn(`无法找到或高亮元素 (selector: ${step.selector}):`, e.message);
+          }
+        });
+
+        li.addEventListener('mouseleave', () => {
+          try {
+            const element = document.querySelector(step.selector);
+            if (element) {
+              element.classList.remove('ac-hover-highlight');
+            }
+          } catch (e) { /* no-op */ }
+        });
+      }
+
       list.appendChild(li);
     });
   }
@@ -525,6 +578,19 @@
     const index = parseInt(li.dataset.index, 10);
 
     if (target.classList.contains("ac-delete-step-btn")) {
+      // --- NEW: Remove highlight before deleting ---
+      const step = scenarios[activeScenarioName].steps[index];
+      if (step && step.selector) {
+        try {
+          const element = document.querySelector(step.selector);
+          if (element) {
+            element.classList.remove('ac-hover-highlight');
+          }
+        } catch (err) {
+            console.warn(`Error removing highlight for selector "${step.selector}":`, err.message);
+        }
+      }
+
       scenarios[activeScenarioName].steps.splice(index, 1);
       saveScenarios();
       renderSteps();
@@ -537,30 +603,30 @@
   function addStep(type) {
     if (type === "wait") {
       showModal({
-        title: "设置等待时间",
-        message: `<div class="ac-modal-content"><label>等待时间 (秒):</label><input type="number" id="step-editor-waitTime" value="1" min="0.1" step="0.1"></div>`,
+        title: "添加等待步骤",
+        message: `<div class="ac-modal-content">
+                      <label>步骤名称 (可选):</label>
+                      <input type="text" id="step-editor-name" placeholder="例如: 等待页面加载">
+                      <label>等待时间 (秒):</label>
+                      <input type="number" id="step-editor-waitTime" value="1" min="0.1" step="0.1">
+                  </div>`,
         buttons: [
           {
             text: "添加",
             type: "success",
             onClick: (modal, close) => {
-              const waitTime =
-                parseFloat(
-                  modal.querySelector("#step-editor-waitTime").value
-                ) || 1;
+              const waitTime = parseFloat(modal.querySelector("#step-editor-waitTime").value) || 1;
+              const name = modal.querySelector("#step-editor-name").value.trim();
               const newStep = createStep("wait");
               newStep.waitTime = waitTime;
+              newStep.name = name;
               scenarios[activeScenarioName].steps.push(newStep);
               saveScenarios();
               renderSteps();
               close();
             },
           },
-          {
-            text: "取消",
-            type: "secondary",
-            onClick: (modal, close) => close(),
-          },
+          { text: "取消", type: "secondary", onClick: (modal, close) => close() },
         ],
       });
     } else {
@@ -571,34 +637,52 @@
 
         if (type === "inputText") {
           showModal({
-            title: "设置要输入的文本",
-            message: `<div class="ac-modal-content"><label>文本内容:</label><textarea id="step-editor-inputValue"></textarea></div>`,
+            title: "添加输入步骤",
+            message: `<div class="ac-modal-content">
+                          <label>步骤名称 (可选):</label>
+                          <input type="text" id="step-editor-name" placeholder="例如: 输入用户名">
+                          <label>文本内容:</label>
+                          <textarea id="step-editor-inputValue"></textarea>
+                      </div>`,
             buttons: [
               {
                 text: "添加",
                 type: "success",
                 onClick: (modal, close) => {
-                  newStep.inputValue = modal.querySelector(
-                    "#step-editor-inputValue"
-                  ).value;
+                  newStep.inputValue = modal.querySelector("#step-editor-inputValue").value;
+                  newStep.name = modal.querySelector("#step-editor-name").value.trim();
                   scenarios[activeScenarioName].steps.push(newStep);
                   saveScenarios();
                   renderSteps();
                   close();
                 },
               },
-              {
-                text: "取消",
-                type: "secondary",
-                onClick: (modal, close) => close(),
-              },
+              { text: "取消", type: "secondary", onClick: (modal, close) => close() },
             ],
           });
-        } else {
-          // For 'click'
-          scenarios[activeScenarioName].steps.push(newStep);
-          saveScenarios();
-          renderSteps();
+        } else { // For 'click'
+          showModal({
+              title: "添加点击步骤",
+              message: `<div class="ac-modal-content">
+                            <label>步骤名称 (可选):</label>
+                            <input type="text" id="step-editor-name" placeholder="例如: 点击登录按钮">
+                            <p class="ac-modal-message" style="margin-top: 10px; font-size: 0.9em; color: #bdc3c7;">已选元素: <code style="background: #34495e; padding: 2px 4px; border-radius: 3px;">${escapeHtml(selector)}</code></p>
+                        </div>`,
+              buttons: [
+                  {
+                      text: "添加",
+                      type: "success",
+                      onClick: (modal, close) => {
+                          newStep.name = modal.querySelector("#step-editor-name").value.trim();
+                          scenarios[activeScenarioName].steps.push(newStep);
+                          saveScenarios();
+                          renderSteps();
+                          close();
+                      }
+                  },
+                  { text: "取消", type: "secondary", onClick: (m, c) => c() }
+              ]
+          });
         }
       });
     }
@@ -607,7 +691,9 @@
   function showStepEditor(step) {
     if (!step) return;
 
-    let contentHTML = '<div class="ac-modal-content">';
+    let contentHTML = `<div class="ac-modal-content">
+                       <label>步骤名称:</label>
+                       <input type="text" id="step-editor-name" value="${escapeHtml(step.name || '')}">`;
     let reselectNeeded = false;
 
     // Common fields
@@ -616,7 +702,7 @@
       contentHTML += `
                 <label>目标元素选择器:</label>
                 <div class="input-group">
-                    <input type="text" id="step-editor-selector" value="${step.selector}">
+                    <input type="text" id="step-editor-selector" value="${escapeHtml(step.selector)}">
                     <button id="step-editor-reselect" class="ac-btn ac-btn-warning">重新选择</button>
                 </div>
             `;
@@ -625,7 +711,7 @@
     // Type-specific fields
     switch (step.type) {
       case "inputText":
-        contentHTML += `<label>要输入的文本:</label><textarea id="step-editor-inputValue">${step.inputValue}</textarea>`;
+        contentHTML += `<label>要输入的文本:</label><textarea id="step-editor-inputValue">${escapeHtml(step.inputValue)}</textarea>`;
         break;
       case "wait":
         contentHTML += `<label>等待时间 (秒):</label><input type="number" id="step-editor-waitTime" value="${step.waitTime}" min="0.1" step="0.1">`;
@@ -639,6 +725,9 @@
       buttons: [{ text: "保存", type: "success", isHtml: true }],
       onRender: (modal) => {
         const save = () => {
+          // Save name
+          step.name = modal.querySelector("#step-editor-name").value.trim();
+
           // Save common fields
           const selectorInput = modal.querySelector("#step-editor-selector");
           if (selectorInput) step.selector = selectorInput.value;
@@ -646,15 +735,10 @@
           // Save type-specific fields
           switch (step.type) {
             case "inputText":
-              step.inputValue = modal.querySelector(
-                "#step-editor-inputValue"
-              ).value;
+              step.inputValue = modal.querySelector("#step-editor-inputValue").value;
               break;
             case "wait":
-              step.waitTime =
-                parseFloat(
-                  modal.querySelector("#step-editor-waitTime").value
-                ) || 1;
+              step.waitTime = parseFloat(modal.querySelector("#step-editor-waitTime").value) || 1;
               break;
           }
           saveScenarios();
@@ -1140,20 +1224,24 @@
   }
 
   function getDragAfterElement(container, y) {
-    const draggableElements = [
-      ...container.querySelectorAll("li:not(.dragging)"),
-    ];
-    return draggableElements.reduce(
-      (closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      },
-      { offset: Number.NEGATIVE_INFINITY }
-    ).element;
+    const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
   }
 })();
