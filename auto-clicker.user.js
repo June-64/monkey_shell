@@ -101,9 +101,12 @@
     minimap.innerHTML = `⚙️`;
     document.body.appendChild(minimap);
 
- 
+    applyStyles();
+    attachEventListeners();
+    loadScenarios();
+    initPositioningAndDraggability();
 
-    const isCollapsed = GM_getValue("isPanelCollapsed", false);
+    const isCollapsed = GM_getValue("isPanelCollapsed", true);
     panel.style.display = isCollapsed ? "none" : "block";
     minimap.style.display = isCollapsed ? "flex" : "none";
   }
@@ -220,6 +223,9 @@
                 background-color: #f39c12;
                 color: #2c3e50;
                 font-weight: 600;
+            }
+            body.ac-is-dragging {
+                user-select: none !important;
             }
         `);
   }
@@ -774,6 +780,11 @@
 
   // --- 辅助函数 ---
   function togglePanel() {
+    // A quick drag should not trigger a toggle. Check wasDragged flag.
+    if (wasDragged) {
+        wasDragged = false; // Reset for the next real click
+        return;
+    }
     const panel = document.getElementById(`${SCRIPT_ID}-panel`);
     const minimap = document.getElementById(`${SCRIPT_ID}-minimap`);
     const isCollapsed = panel.style.display === "none";
@@ -853,6 +864,9 @@
     let offsetX, offsetY;
 
     const onDragStart = (e) => {
+      // Only drag with the left mouse button
+      if (e.button !== 0) return;
+
       if (e.target.classList.contains("ac-toggle-btn")) {
         wasDragged = false;
         return;
@@ -865,7 +879,8 @@
       // Calculate offset from the *right* edge
       offsetX = rect.right - e.clientX;
       offsetY = e.clientY - rect.top;
-
+      
+      document.body.classList.add('ac-is-dragging'); // Prevent text selection
       document.addEventListener("mousemove", onDrag);
       document.addEventListener("mouseup", onDragEnd, { once: true });
     };
@@ -895,6 +910,7 @@
     };
 
     const onDragEnd = () => {
+      document.body.classList.remove('ac-is-dragging'); // Re-enable text selection
       isDragging = false;
       dragTarget = null;
       document.removeEventListener("mousemove", onDrag);
@@ -1009,9 +1025,6 @@
   }
 
   // --- 初始化 ---
-  createPanel();
-
-  // 初始化 flatpickr 日期时间选择器
   function initFlatpickr() {
     flatpickr("#ac-timer-input", {
       enableTime: true,
@@ -1143,8 +1156,4 @@
       { offset: Number.NEGATIVE_INFINITY }
     ).element;
   }
-  applyStyles();
-  loadScenarios();
-  initPositioningAndDraggability();
-  attachEventListeners();
 })();
