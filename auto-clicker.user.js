@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         网页自动化流程管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      6.0
+// @version      6.1
 // @description  一个功能强大的网页自动化工具，支持多方案、步骤类型、持久化存储和高级流程控制。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
@@ -62,7 +62,7 @@
     document.body.appendChild(panel);
 
     panel.innerHTML = `
-            <div class="ac-header"><span class="ac-title">流程管理 v6.0</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
+            <div class="ac-header"><span class="ac-title">流程管理 v6.1</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
             <div class="ac-body">
                 <div class="ac-section ac-scenario-manager">
                     <label>当前方案:</label>
@@ -938,90 +938,63 @@
   }
 
   function initPositioningAndDraggability() {
-    const panel = document.getElementById(`${SCRIPT_ID}-panel`);
-    const minimap = document.getElementById(`${SCRIPT_ID}-minimap`);
-    const header = panel.querySelector(".ac-header");
+      const panel = document.getElementById(`${SCRIPT_ID}-panel`);
+      const header = panel.querySelector('.ac-header');
+      let pos = GM_getValue('panelPosition', { x: 20, y: 20 });
+      let startPos = { x: 0, y: 0 };
+      let initialPanelPos = { x: 0, y: 0 };
 
-    // Default to top-right corner.
-    let position = JSON.parse(
-      GM_getValue(
-        "panelPosition",
-        JSON.stringify({ top: "100px", right: "20px" })
-      )
-    );
+      const applyPosition = (newPos) => {
+          const buffer = 10; // 10px from edge
+          const constrainedX = Math.max(buffer, Math.min(newPos.x, window.innerWidth - panel.offsetWidth - buffer));
+          const constrainedY = Math.max(buffer, Math.min(newPos.y, window.innerHeight - panel.offsetHeight - buffer));
+          
+          pos.x = constrainedX;
+          pos.y = constrainedY;
 
-    const applyPosition = (pos) => {
-      panel.style.top = pos.top;
-      panel.style.right = pos.right;
-      panel.style.left = "auto"; // Ensure left is not set
-      minimap.style.top = pos.top;
-      minimap.style.right = pos.right;
-      minimap.style.left = "auto"; // Ensure left is not set
-    };
-    applyPosition(position);
+          panel.style.left = `${pos.x}px`;
+          panel.style.top = `${pos.y}px`;
+          panel.style.right = 'auto';
+          panel.style.bottom = 'auto';
+      };
 
-    let isDragging = false;
-    let dragTarget = null;
-    let offsetX, offsetY;
+      const onDragStart = (e) => {
+          if (e.button !== 0 || e.target.closest('.ac-toggle-btn, .ac-btn, .ac-header-controls')) {
+              return;
+          }
+          wasDragged = false;
+          startPos.x = e.clientX;
+          startPos.y = e.clientY;
+          initialPanelPos.x = panel.offsetLeft;
+          initialPanelPos.y = panel.offsetTop;
+          
+          document.body.classList.add('ac-is-dragging');
+          window.addEventListener('mousemove', onDrag);
+          window.addEventListener('mouseup', onDragEnd);
+      };
 
-    const onDragStart = (e) => {
-      // Only drag with the left mouse button
-      if (e.button !== 0) return;
+      const onDrag = (e) => {
+          e.preventDefault();
+          wasDragged = true;
+          const dx = e.clientX - startPos.x;
+          const dy = e.clientY - startPos.y;
+          applyPosition({ x: initialPanelPos.x + dx, y: initialPanelPos.y + dy });
+      };
 
-      if (e.target.classList.contains("ac-toggle-btn")) {
-        wasDragged = false;
-        return;
-      }
+      const onDragEnd = () => {
+          document.body.classList.remove('ac-is-dragging');
+          window.removeEventListener('mousemove', onDrag);
+          window.removeEventListener('mouseup', onDragEnd);
+          if (wasDragged) {
+              GM_setValue('panelPosition', pos);
+          }
+      };
 
-      wasDragged = false;
-      isDragging = true;
-      dragTarget = e.currentTarget === header ? panel : minimap;
-      const rect = dragTarget.getBoundingClientRect();
-      // Calculate offset from the *right* edge
-      offsetX = rect.right - e.clientX;
-      offsetY = e.clientY - rect.top;
-      
-      document.body.classList.add('ac-is-dragging'); // Prevent text selection
-      document.addEventListener("mousemove", onDrag);
-      document.addEventListener("mouseup", onDragEnd, { once: true });
-    };
+      header.addEventListener('mousedown', onDragStart);
+      window.addEventListener('resize', () => applyPosition(pos));
 
-    const onDrag = (e) => {
-      if (!isDragging) return;
-      wasDragged = true;
-      e.preventDefault();
-
-      // Calculate raw new positions
-      let newY = e.clientY - offsetY;
-      let newRight = window.innerWidth - e.clientX - offsetX;
-
-      // Boundary checks
-      const rect = dragTarget.getBoundingClientRect();
-      const winWidth = window.innerWidth;
-      const winHeight = window.innerHeight;
-
-      if (newY < 0) newY = 0; // Top boundary
-      if (newY + rect.height > winHeight) newY = winHeight - rect.height; // Bottom boundary
-
-      if (newRight < 0) newRight = 0; // Right boundary
-      if (newRight + rect.width > winWidth) newRight = winWidth - rect.width; // Left boundary
-
-      const newPosition = { top: `${newY}px`, right: `${newRight}px` };
-      applyPosition(newPosition);
-    };
-
-    const onDragEnd = () => {
-      document.body.classList.remove('ac-is-dragging'); // Re-enable text selection
-      isDragging = false;
-      dragTarget = null;
-      document.removeEventListener("mousemove", onDrag);
-
-      const finalPosition = { top: panel.style.top, right: panel.style.right };
-      GM_setValue("panelPosition", JSON.stringify(finalPosition));
-    };
-
-    header.addEventListener("mousedown", onDragStart);
-    minimap.addEventListener("mousedown", onDragStart);
+      // Initial position apply
+      applyPosition(pos);
   }
 
   function getCssSelector(el) {
