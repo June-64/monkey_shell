@@ -16,6 +16,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_getResourceText
+// @grant        GM_registerMenuCommand
 // ==/UserScript==
 
 (function () {
@@ -116,6 +117,9 @@
     initCollapsibleSections();
     loadScenarios();
     initPositioningAndDraggability();
+
+    // --- Add Menu Command for Position Reset ---
+    GM_registerMenuCommand("重置面板位置", resetPanelPosition);
 
     const isCollapsed = GM_getValue("isPanelCollapsed", true);
     panel.style.display = isCollapsed ? "none" : "block";
@@ -937,18 +941,39 @@
     }, 4000);
   }
 
+  function resetPanelPosition() {
+    // Setting to undefined effectively deletes the key, so the default will be used on next load.
+    GM_setValue("panelPosition", undefined); 
+    showNotification('面板位置已重置，页面即将刷新...', 'success');
+    setTimeout(() => window.location.reload(), 1500);
+  }
+
   function initPositioningAndDraggability() {
     const panel = document.getElementById(`${SCRIPT_ID}-panel`);
     const minimap = document.getElementById(`${SCRIPT_ID}-minimap`);
     const header = panel.querySelector(".ac-header");
 
-    // Default to top-right corner.
-    let position = JSON.parse(
-      GM_getValue(
-        "panelPosition",
-        JSON.stringify({ top: "100px", right: "20px" })
-      )
-    );
+    const defaultValue = { top: "100px", right: "20px" };
+    let position;
+
+    try {
+        let storedPos = GM_getValue("panelPosition");
+        if (typeof storedPos === 'string' && storedPos.trim().startsWith('{')) {
+            position = JSON.parse(storedPos);
+        } else if (typeof storedPos === 'object' && storedPos !== null) {
+            position = storedPos; // Use the object directly if that's what's stored
+        } else {
+            position = defaultValue; // Use default for undefined, null, or other types
+        }
+        
+        // Final validation to ensure the object is usable
+        if (typeof position.top !== 'string' || typeof position.right !== 'string') {
+            throw new Error("Position object is missing 'top' or 'right' properties.");
+        }
+    } catch (e) {
+        console.warn(`网页自动化流程管理: 加载面板位置失败，将重置为默认值。错误: ${e.message}`);
+        position = defaultValue;
+    }
 
     const applyPosition = (pos) => {
       panel.style.top = pos.top;
