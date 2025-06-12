@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         网页自动化流程管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      6.0
+// @version      6.2
 // @description  一个功能强大的网页自动化工具，支持多方案、步骤类型、持久化存储和高级流程控制。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
@@ -63,7 +63,7 @@
     document.body.appendChild(panel);
 
     panel.innerHTML = `
-            <div class="ac-header"><span class="ac-title">流程管理 v6.0</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
+            <div class="ac-header"><span class="ac-title">流程管理 v6.2</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
             <div class="ac-body">
                 <div class="ac-section ac-scenario-manager">
                     <label>当前方案:</label>
