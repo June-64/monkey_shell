@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         网页自动化流程管理
 // @namespace    https://june-64.github.io/monkey_shell/
-// @version      6.2
-// @description  一个功能强大的网页自动化工具，支持多方案、步骤类型、持久化存储和高级流程控制。
+// @version      6.3
+// @description  一个功能强大的网页自动化工具，支持多方案、步骤类型、持久化存储、高级流程控制和日志查看。
 // @author       june
 // @homepageURL  https://june-64.github.io/monkey_shell/
 // @updateURL    https://raw.githubusercontent.com/June-64/monkey_shell/main/auto-clicker.user.js
@@ -52,9 +52,107 @@
   let countdownIntervalId = null;
   let wasDragged = false;
 
+  // --- 日志系统 ---
+  let executionLogs = [];
+  const MAX_LOGS = 500; // 最大日志条数
+
   // --- 初始化 ---
   createPanel();
   initFlatpickr();
+  loadLogs();
+
+  // --- 日志相关函数 ---
+  function addLog(type, message, details = null) {
+    const timestamp = new Date().toLocaleString('zh-CN');
+    const log = {
+      id: Date.now() + Math.random(),
+      timestamp,
+      type, // 'info', 'success', 'warning', 'error'
+      message,
+      details,
+      scenario: activeScenarioName
+    };
+    
+    executionLogs.unshift(log); // 添加到开头，最新的在前面
+    
+    // 限制日志数量
+    if (executionLogs.length > MAX_LOGS) {
+      executionLogs = executionLogs.slice(0, MAX_LOGS);
+    }
+    
+    saveLogs();
+    updateLogDisplay();
+  }
+
+  function saveLogs() {
+    try {
+      GM_setValue("execution_logs", JSON.stringify(executionLogs));
+    } catch (e) {
+      console.warn('保存日志失败:', e);
+    }
+  }
+
+  function loadLogs() {
+    try {
+      const saved = GM_getValue("execution_logs", "[]");
+      executionLogs = JSON.parse(saved);
+    } catch (e) {
+      console.warn('加载日志失败:', e);
+      executionLogs = [];
+    }
+  }
+
+  function clearLogs() {
+    executionLogs = [];
+    saveLogs();
+    updateLogDisplay();
+    addLog('info', '日志已清空');
+  }
+
+  function updateLogDisplay() {
+    const logContainer = document.getElementById('ac-logs-container');
+    if (!logContainer || logContainer.style.display === 'none') return;
+
+    const logList = document.getElementById('ac-logs-list');
+    if (!logList) return;
+
+    if (executionLogs.length === 0) {
+      logList.innerHTML = '<div class="ac-log-empty">暂无日志记录</div>';
+      return;
+    }
+
+    logList.innerHTML = executionLogs.map(log => {
+      const typeIcon = {
+        'info': 'ℹ️',
+        'success': '✅',
+        'warning': '⚠️',
+        'error': '❌'
+      }[log.type] || 'ℹ️';
+
+      const typeClass = `ac-log-${log.type}`;
+      const detailsHtml = log.details ? `<div class="ac-log-details">${escapeHtml(log.details)}</div>` : '';
+      
+      return `
+        <div class="ac-log-item ${typeClass}">
+          <div class="ac-log-header">
+            <span class="ac-log-icon">${typeIcon}</span>
+            <span class="ac-log-message">${escapeHtml(log.message)}</span>
+            <span class="ac-log-time">${log.timestamp}</span>
+          </div>
+          ${log.scenario ? `<div class="ac-log-scenario">方案: ${escapeHtml(log.scenario)}</div>` : ''}
+          ${detailsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function showLogs() {
+    const logContainer = document.getElementById('ac-logs-container');
+    if (logContainer) {
+      logContainer.style.display = logContainer.style.display === 'none' ? 'block' : 'none';
+      updateLogDisplay();
+    }
+  }
 
   // --- UI界面创建 ---
   function createPanel() {
@@ -63,7 +161,7 @@
     document.body.appendChild(panel);
 
     panel.innerHTML = `
-            <div class="ac-header"><span class="ac-title">流程管理 v6.2</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
+            <div class="ac-header"><span class="ac-title">流程管理 v6.3</span><span class="ac-toggle-btn" title="最小化面板">—</span></div>
             <div class="ac-body">
                 <div class="ac-section ac-scenario-manager">
                     <label>当前方案:</label>
@@ -102,6 +200,21 @@
                     </div>
                 </div>
 
+                <div class="ac-section ac-logs-section">
+                    <div class="ac-collapsible-header" data-section-key="logs">
+                        <h3>执行日志</h3>
+                        <div class="ac-header-controls">
+                            <button id="ac-clear-logs-btn" class="ac-btn ac-btn-icon" title="清空日志">🗑️</button>
+                            <span class="ac-collapse-icon">▲</span>
+                        </div>
+                    </div>
+                    <div class="ac-collapsible-content">
+                        <div id="ac-logs-container">
+                            <div id="ac-logs-list"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="ac-section"><button id="ac-run-btn" class="ac-btn ac-btn-main">立即执行当前方案</button></div>
             </div>
         `;
@@ -118,12 +231,16 @@
     loadScenarios();
     initPositioningAndDraggability();
 
-    // --- Add Menu Command for Position Reset ---
+    // --- Add Menu Commands ---
     GM_registerMenuCommand("重置面板位置", resetPanelPosition);
+    GM_registerMenuCommand("查看执行日志", showLogs);
 
     const isCollapsed = GM_getValue("isPanelCollapsed", true);
     panel.style.display = isCollapsed ? "none" : "block";
     minimap.style.display = isCollapsed ? "flex" : "none";
+
+    // 初始化时记录日志
+    addLog('info', '脚本启动', `当前页面: ${window.location.href}`);
   }
 
   // --- 样式定义 (部分调整) ---
@@ -200,6 +317,25 @@
             /* Drag and Drop styles */
             #ac-steps-list li.dragging { opacity: 0.5; background: #56708b; }
             #ac-steps-list li.drag-over { border-top: 2px solid #3498db; }
+
+            /* Logs Section */
+            #ac-logs-container { max-height: 300px; overflow-y: auto; background-color: #34495e; border-radius: 5px; padding: 10px; }
+            #ac-logs-container::-webkit-scrollbar { width: 8px; }
+            #ac-logs-container::-webkit-scrollbar-track { background: #2c3e50; }
+            #ac-logs-container::-webkit-scrollbar-thumb { background-color: #56708b; border-radius: 4px; }
+            #ac-logs-container::-webkit-scrollbar-thumb:hover { background-color: #6c88a9; }
+            .ac-log-empty { text-align: center; color: #7f8c8d; padding: 20px; font-style: italic; }
+            .ac-log-item { margin-bottom: 10px; padding: 8px; border-radius: 4px; border-left: 3px solid #bdc3c7; background-color: #2c3e50; }
+            .ac-log-item.ac-log-info { border-left-color: #3498db; }
+            .ac-log-item.ac-log-success { border-left-color: #27ae60; }
+            .ac-log-item.ac-log-warning { border-left-color: #f39c12; }
+            .ac-log-item.ac-log-error { border-left-color: #e74c3c; }
+            .ac-log-header { display: flex; align-items: center; gap: 8px; }
+            .ac-log-icon { font-size: 16px; }
+            .ac-log-message { flex: 1; font-weight: 500; }
+            .ac-log-time { font-size: 12px; color: #7f8c8d; }
+            .ac-log-scenario { font-size: 12px; color: #95a5a6; margin-top: 4px; }
+            .ac-log-details { font-size: 13px; color: #bdc3c7; margin-top: 4px; background-color: #34495e; padding: 4px 8px; border-radius: 3px; font-family: monospace; }
 
             /* Highlights */
             .ac-highlight { outline: 3px dashed #e67e22 !important; background-color: rgba(230, 126, 34, 0.1) !important; cursor: pointer !important; }
@@ -314,6 +450,27 @@
       .getElementById("ac-cancel-timer-btn")
       .addEventListener("click", cancelTimer);
 
+    // Log Controls
+    document
+      .getElementById("ac-clear-logs-btn")
+      .addEventListener("click", () => {
+        showModal({
+          title: "确认清空日志",
+          message: "您确定要清空所有执行日志吗？此操作无法撤销。",
+          buttons: [
+            { text: "取消", type: "secondary" },
+            {
+              text: "确认清空",
+              type: "danger",
+              onClick: (modal, close) => {
+                clearLogs();
+                close();
+              }
+            }
+          ]
+        });
+      });
+
     // Drag and Drop for steps
     const stepsList = document.getElementById("ac-steps-list");
     let draggedItem = null;
@@ -421,6 +578,7 @@
     renderScenariosDropdown();
     renderSteps();
     updateTimerUI();
+    updateLogDisplay();
   }
 
   function saveScenarios() {
@@ -452,10 +610,13 @@
       renderSteps();
       updateTimerUI();
       hideScenarioCreator();
+      addLog('success', `创建新方案: ${name}`);
     } else if (!name) {
       showNotification("方案名称不能为空！", "error");
+      addLog('error', '创建方案失败: 方案名称不能为空');
     } else {
       showNotification("该方案名称已存在！", "error");
+      addLog('error', `创建方案失败: 方案名称 "${name}" 已存在`);
     }
   }
 
@@ -485,6 +646,7 @@
               `方案 "${deletedScenarioName}" 已被删除。`,
               "info"
             );
+            addLog('warning', `删除方案: ${deletedScenarioName}`);
             closeModal();
           },
         },
@@ -493,10 +655,12 @@
   }
 
   function switchScenario(e) {
+    const oldScenario = activeScenarioName;
     activeScenarioName = e.target.value;
     GM_setValue("activeScenarioName", activeScenarioName);
     renderSteps();
     updateTimerUI();
+    addLog('info', `切换方案: ${oldScenario} → ${activeScenarioName}`);
   }
 
   function renderScenariosDropdown() {
@@ -613,9 +777,11 @@
         }
       }
 
+      const deletedStep = scenarios[activeScenarioName].steps[index];
       scenarios[activeScenarioName].steps.splice(index, 1);
       saveScenarios();
       renderSteps();
+      addLog('warning', `删除步骤: ${deletedStep.name || `${deletedStep.type} #${index + 1}`}`);
     } else {
       // Click on step itself opens editor
       showStepEditor(scenarios[activeScenarioName].steps[index]);
@@ -645,6 +811,7 @@
               scenarios[activeScenarioName].steps.push(newStep);
               saveScenarios();
               renderSteps();
+              addLog('success', `添加等待步骤: ${newStep.name || `${newStep.waitTime}秒`}`);
               close();
             },
           },
@@ -676,6 +843,7 @@
                   scenarios[activeScenarioName].steps.push(newStep);
                   saveScenarios();
                   renderSteps();
+                  addLog('success', `添加输入步骤: ${newStep.name || '输入文本'}`);
                   close();
                 },
               },
@@ -699,6 +867,7 @@
                           scenarios[activeScenarioName].steps.push(newStep);
                           saveScenarios();
                           renderSteps();
+                          addLog('success', `添加点击步骤: ${newStep.name || '点击元素'}`);
                           close();
                       }
                   },
@@ -831,10 +1000,12 @@
     const steps = scenarios[activeScenarioName]?.steps;
     if (!steps || steps.length === 0) {
       showNotification("当前方案没有步骤。", "error");
+      addLog('error', '执行失败: 当前方案没有步骤');
       return;
     }
 
     showNotification(`开始执行方案: "${activeScenarioName}"`, "success");
+    addLog('info', `开始执行方案: ${activeScenarioName}`, `共 ${steps.length} 个步骤`);
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
@@ -845,8 +1016,10 @@
 
       try {
         await executeSingleStep(step);
+        addLog('success', `步骤 ${i + 1} 执行成功`, `${step.name || step.type}: ${step.selector || step.waitTime + '秒' || ''}`);
       } catch (error) {
         showNotification(`步骤 ${i + 1} 失败: ${error.message}`, "error");
+        addLog('error', `步骤 ${i + 1} 执行失败: ${error.message}`, `${step.name || step.type}: ${step.selector || step.waitTime + '秒' || ''}`);
         if (stepLi) stepLi.style.backgroundColor = ""; // Remove highlight on failure
         return; // Stop execution
       }
@@ -855,6 +1028,7 @@
     }
 
     showNotification("方案执行完毕。", "success");
+    addLog('success', `方案执行完毕: ${activeScenarioName}`);
   }
 
   function executeSingleStep(step) {
@@ -1167,11 +1341,13 @@
     const timeStr = document.getElementById("ac-timer-input").value;
     if (!timeStr) {
       showNotification("请选择一个时间。", "error");
+      addLog('error', '设置定时器失败: 未选择时间');
       return;
     }
     const targetTime = new Date(timeStr).getTime();
     if (isNaN(targetTime) || targetTime <= Date.now()) {
       showNotification("请选择一个未来的时间。", "error");
+      addLog('error', '设置定时器失败: 时间必须是未来时间');
       return;
     }
 
@@ -1183,6 +1359,7 @@
     };
     saveScenarios();
     updateTimerUI();
+    addLog('success', `设置定时器: ${timeStr}`, `方案: ${activeScenarioName}`);
   }
 
   function pauseResumeTimer() {
@@ -1194,11 +1371,13 @@
       timer.isPaused = false;
       timer.timeoutId = setTimeout(executeSteps, timer.remainingTime);
       timer.targetTime = Date.now() + timer.remainingTime;
+      addLog('info', '定时器已恢复');
     } else {
       // Pause
       timer.isPaused = true;
       clearTimeout(timer.timeoutId);
       timer.remainingTime = timer.targetTime - Date.now();
+      addLog('warning', '定时器已暂停');
     }
     saveScenarios();
     updateTimerUI();
@@ -1210,6 +1389,7 @@
     scenarios[activeScenarioName].timer = null;
     saveScenarios();
     updateTimerUI();
+    addLog('warning', '定时器已取消');
   }
 
   function updateTimerUI() {
@@ -1295,8 +1475,8 @@
           const section = header.closest('.ac-section');
           const sectionKey = header.dataset.sectionKey;
 
-          // Apply saved state
-          if (states[sectionKey] === true) {
+          // Apply saved state (logs section defaults to collapsed)
+          if (states[sectionKey] === true || (sectionKey === 'logs' && states[sectionKey] === undefined)) {
               section.classList.add('collapsed');
           }
 
