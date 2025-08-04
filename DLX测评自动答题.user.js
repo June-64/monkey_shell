@@ -44,7 +44,7 @@
         // 脚本执行间隔（毫秒）·
         interval: 100,
         // 是否启用日志
-        enableLog: true
+        enableLog: false
     };
 
     // 任务状态
