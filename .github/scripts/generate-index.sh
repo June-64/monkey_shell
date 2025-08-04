@@ -14,12 +14,21 @@ fi
 commit_date=$(git log -1 --format=%cd --date=format:"%Y-%m-%d %H:%M:%S")
 commit_message_subject=$(git log -1 --format=%s)
 
+# Get files changed in the last commit
+changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '\.js$' || true)
+
 # Generate the HTML for the list of script files
 file_list_html_raw=""
 for filename in *.js; do
   # Ensure we only process actual files
   if [ -f "$filename" ]; then
-    file_list_html_raw="${file_list_html_raw}      <li><a href=\"${filename}\">${filename}</a></li>\n"
+    # Check if this file was changed in the last commit
+    is_recently_changed=""
+    if echo "$changed_files" | grep -q "^$filename$"; then
+      is_recently_changed=' <span class="recently-changed">🆕</span>'
+    fi
+    
+    file_list_html_raw="${file_list_html_raw}      <li><a href=\"${filename}\">${filename}${is_recently_changed}</a></li>\n"
   fi
 done
 
@@ -44,6 +53,7 @@ cat <<EOF > docs/index.html
             --link-color: #007bff;
             --border-color: #e9ecef;
             --shadow-color: rgba(0, 0, 0, 0.05);
+            --accent-color: #28a745;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -55,6 +65,7 @@ cat <<EOF > docs/index.html
                 --link-color: #69b3ff;
                 --border-color: #383838;
                 --shadow-color: rgba(0, 0, 0, 0.25);
+                --accent-color: #40d461;
             }
         }
 
@@ -120,6 +131,17 @@ cat <<EOF > docs/index.html
             font-size: 1.1em;
             word-break: break-all;
             transition: color 0.2s;
+        }
+        .recently-changed {
+            color: var(--accent-color);
+            font-size: 0.9em;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
         }
         footer {
             text-align: center;
