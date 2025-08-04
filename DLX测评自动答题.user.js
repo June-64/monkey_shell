@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DLX测评自动答题
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  DLX测评自动答题
 // @author       june
 // @match        *://*/*
